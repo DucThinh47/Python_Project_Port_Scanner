@@ -17,14 +17,14 @@ COMMON_PORTS = [21, 22, 23, 25, 53, 80, 110, 443, 3306, 8080]
 # target: địa chỉ IP của mục tiêu
 # ports: danh sách các cổng cần quét
 # save_results: T/F
-def scan_ports(target, ports, save_results):
+def scan_ports(target, ports, save_results, protocol):
     """
     Hàm quét các cổng trên mục tiêu 
     """
-    console.print(f"\n[*] Bắt đầu quét {target}", style="bold cyan")
+    console.print(f"\n[*] Bắt đầu quét {target} ({protocol})", style="bold cyan")
     
     # bảng hiển thị kết quả
-    table = Table(title=f"Kết quả quét {target}")
+    table = Table(title=f"Kết quả quét {target} ({protocol})")
     table.add_column("Port", style="cyan", justify="right")
     table.add_column("Service", style="magenta")
     table.add_column("Status", style="green")
@@ -34,7 +34,7 @@ def scan_ports(target, ports, save_results):
     results = [] # list lưu kết quả (port và service)
 
     for port in ports:
-        thread = threading.Thread(target=scan_port, args=(target, port, results)) # tạo 1 luồng mới quét cổng
+        thread = threading.Thread(target=scan_port, args=(target, port, results, protocol)) # tạo 1 luồng mới quét cổng
         threads.append(thread) # thêm luồng vào list
         thread.start() # bắt đầu luồng
 
@@ -50,7 +50,7 @@ def scan_ports(target, ports, save_results):
     # lưu kết quả vào file 
     if save_results:
         with open("scan_results.txt", "a") as file:
-            file.write(f"\nKết quả quét {target}:\n")
+            file.write(f"\nKết quả quét {target} ({protocol}):\n")
             for port, service in results:
                 file.write(f"[+] Cổng {port} ({service}) đang mở trên {target}\n")
 
@@ -58,7 +58,7 @@ def scan_ports(target, ports, save_results):
 # ip_address: địa chỉ IP của mục tiêu
 # port: cổng cần quét
 # results: list lưu kết quả quét (open port và service chạy trên port) 
-def scan_port(ip_address, port, results):
+def scan_port(ip_address, port, results, protocol):
     """
     Hàm quét một cổng cụ thể trên một địa chỉ IP
     """
@@ -66,24 +66,35 @@ def scan_port(ip_address, port, results):
         # tạo socket và thiết lập timeout
         # socket sẽ sử dụng giao thức IPv4 (AF_INET) và kiểu kết nối TCP (SOCK_STREAM).
         # thiết lập timeout cho kết nối là 0.5s. Nếu kết nối không thành công trong thời gian này, bỏ qua và chuyển sang cổng tiếp theo
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        sock.settimeout(0.5)
-
-        # kết nối đến cổng trên địa chỉ IP mục tiêu
-        # hàm connect_ex return 0 nếu kết nối thành công (cổng mở), ngược lại return một mã lỗi (cổng đóng hoặc không phản hồi)
-        result = sock.connect_ex((ip_address, port))
+        if protocol == "TCP":
+            # tạo socket TCP
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(0.5)
+            # kết nối đến cổng trên địa chỉ IP mục tiêu
+            # hàm connect_ex return 0 nếu kết nối thành công (cổng mở), ngược lại return một mã lỗi (cổng đóng hoặc không phản hồi)
+            result = sock.connect_ex((ip_address, port))
+        else: 
+            # tạo socket UDP
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.settimeout(0.5)
+            sock.sendto(b'', (ip_address, port))
+            try:
+                data, addr = sock.recvfrom(1024)
+                result = 0  # cổng mở
+            except socket.timeout:
+                result = 1  # cổng đóng hoặc không phản hồi
 
         # kiểm tra kết quả kết nối
         if result == 0:
             try:
                 # lấy tên service đang chạy trên cổng đó
-                service = socket.getservbyport(port) 
+                service = socket.getservbyport(port, protocol.lower()) 
             except:
                 # không xác định được service 
                 service = "Unknown"
             # lưu kết quả (port và service) vào danh sách results
             results.append((port, service))
-            console.print(f"[+] Cổng {port} ({service}) đang mở trên {ip_address}", style="yellow")
+            console.print(f"[+] Cổng {port} ({service}) đang mở trên {ip_address} ({protocol})", style="yellow")
         # đóng kết nối socket sau khi kiểm tra
         sock.close()
     except:
@@ -118,10 +129,12 @@ def parse_targets(target_input):
 
 if __name__ == "__main__":
     target_input = input("[*] Nhập địa chỉ IP cần quét (IP, dải IP, CIDR): ")
+    protocol_input = input("[*] Chọn giao thức quét (1: TCP, 2: UDP): ")
+    protocol = "TCP" if protocol_input == "1" else "UDP"
     mode_input = input("[*] Chọn chế độ quét (1: Quét nhanh, 2: Quét đầy đủ): ")
 
     if mode_input == "1":
-        console.print("[*] Đã chọn chế độ quét nhanh(Bắt đầu quét các cổng phổ biến))", style="blue")
+        console.print("[*] Đã chọn chế độ quét nhanh (Bắt đầu quét các cổng phổ biến))", style="blue")
         ports = COMMON_PORTS
     else:
         num_ports_input = int(input("[*] Nhập số lượng cổng muốn quét: "))
@@ -135,4 +148,4 @@ if __name__ == "__main__":
     console.print(f"[*] Đang quét {len(targets)} mục tiêu...", style="cyan")
 
     for target in targets:
-        scan_ports(target, ports, save_results)
+        scan_ports(target, ports, save_results, protocol)

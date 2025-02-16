@@ -1,6 +1,6 @@
 # Port Scanner
 
-Một công cụ quét cổng đơn giản được viết bằng Python.
+Một công cụ quét cổng đơn giản được viết bằng Python. Công cụ được thiết kế không nâng cao như các công cụ quét cổng khác, ví dụ **Nmap**, chỉ là một công cụ quét cổng đơn giản giúp hiểu rõ hơn quá trình quét cổng hoạt động ra sao.
 
 ## Mô tả chức năng
 
@@ -16,6 +16,7 @@ Một công cụ quét cổng đơn giản được viết bằng Python.
 
 6. **Cho phép lưu kết quả quét ra một file**
 
+### **[Source code](https://github.com/DucThinh47/Python_Project_Port_Scanner/blob/main/ports_scanner.py)**
 
 ## Demo công cụ
 
@@ -30,6 +31,7 @@ Một số hình ảnh khi sử dụng:
 ![img](3)
 
 ![img](4)
+
 
 
 
