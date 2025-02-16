@@ -22,15 +22,15 @@ Một công cụ quét cổng đơn giản được viết bằng Python. Công 
 
 Một số hình ảnh khi sử dụng: 
 
-![img](0)
+![img](https://github.com/DucThinh47/Python_Project_Port_Scanner/blob/main/images/image.png?raw=true)
 
-![img](1)
+![img](https://github.com/DucThinh47/Python_Project_Port_Scanner/blob/main/images/image1.png?raw=true)
 
-![img](2)
+![img](https://github.com/DucThinh47/Python_Project_Port_Scanner/blob/main/images/image2.png?raw=true)
 
-![img](3)
+![img](https://github.com/DucThinh47/Python_Project_Port_Scanner/blob/main/images/image3.png?raw=true)
 
-![img](4)
+![img](https://github.com/DucThinh47/Python_Project_Port_Scanner/blob/main/images/image4.png?raw=true)
 
 
 
